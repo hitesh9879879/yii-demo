@@ -5,9 +5,34 @@ namespace app\controllers;
 use app\models\User;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use Vtiful\Kernel\Excel;
+use yii\filters\AccessControl;
+use yii\filters\VerbFilter;
 
 class ExcelController extends \yii\web\Controller
 {
+    public function behaviors()
+    {
+        return [
+            'access' => [
+                'class' => AccessControl::class,
+                'only' => ['index'],
+                'rules' => [
+                    [
+                        'actions' => ['index'],
+                        'allow' => true,
+                        'roles' => ['admin', 'temporary admin'],
+                    ],
+                ],
+            ],
+            'verbs' => [
+                'class' => VerbFilter::class,
+                'actions' => [
+                    'logout' => ['post'],
+                ],
+            ],
+        ];
+    }
+
     public function actionIndex()
     {
         $fileName = \Yii::$app->request->get('file_name');

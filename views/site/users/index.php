@@ -37,6 +37,7 @@ $this->title = 'User';
                             <tr>
                                 <th class="text-center">#</th>
                                 <th>Name</th>
+                                <th>Status</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                             </thead>
@@ -54,7 +55,8 @@ $this->title = 'User';
                                         </div>
                                     </div>
                                 </td>
-                                <td class="text-center"><?= \yii\helpers\Html::a("Edit", ['user-edit', 'id' => $user->id], ['class' => 'btn btn-info']); ?>  <?= \yii\helpers\Html::a("Delete", ['user-delete', 'id' => $user->id], ['class' => 'btn btn-danger']); ?></td>
+                                <td class="text-muted"><?= $user['status'] == 1 ? 'Activate' : 'Deactivate' ?></td>
+                                <td class="text-center"><?= \yii\helpers\Html::a("Edit", ['user-edit', 'id' => $user->id], ['class' => 'btn btn-info']); ?>  <?= \yii\helpers\Html::a("Delete", ['user-delete', 'id' => $user->id], ['class' => 'btn btn-danger']); ?> <?php if (\Yii::$app->user->can('admin')): ?> <?= \yii\helpers\Html::a("Update Role", ['role-update', 'id' => $user->id], ['class' => 'btn btn-dark']); ?> <?= \yii\helpers\Html::a("Change Status", ['change-status', 'id' => $user->id], ['class' => 'btn btn-dark']); ?> <?php endif;?></td>
                             </tr>
                             <?php endforeach; ?>
                             </tbody>

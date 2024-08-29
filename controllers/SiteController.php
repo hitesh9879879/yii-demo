@@ -7,6 +7,7 @@ use app\models\Post;
 use app\models\RemovePost;
 use app\models\RemovePostImage;
 use app\models\User;
+use common\components\helpers\CustomHelper;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
@@ -37,32 +38,32 @@ class SiteController extends Controller
                     [
                         'actions' => ['index'],
                         'allow' => true,
-                        'roles' => ['admin', 'user'],
+                        'roles' => ['admin', 'user', 'temporary admin', 'manager'],
                     ],
                     [
                         'actions' => ['user'],
                         'allow' => true,
-                        'roles' => ['admin'],
+                        'roles' => ['admin', 'temporary admin'],
                     ],
                     [
                         'actions' => ['about'],
                         'allow' => true,
-                        'roles' => ['admin', 'user'],
+                        'roles' => ['admin', 'user', 'temporary admin'],
                     ],
                     [
                         'actions' => ['contact'],
                         'allow' => true,
-                        'roles' => ['admin', 'user'],
+                        'roles' => ['admin', 'user', 'temporary admin'],
                     ],
                     [
                         'actions' => ['post'],
                         'allow' => true,
-                        'roles' => ['admin', 'user'],
+                        'roles' => ['admin', 'user', 'temporary admin'],
                     ],
                     [
                         'actions' => ['add'],
                         'allow' => true,
-                        'roles' => ['admin'],
+                        'roles' => ['admin', 'temporary admin'],
                     ],
                 ],
             ],
@@ -98,7 +99,17 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        if(Yii::$app->user->can('user')) {
+        if (!Yii::$app->user->isGuest) {
+            $user = Yii::$app->user->identity->status;
+
+            if($user == 0) {
+                Yii::$app->user->logout();
+                Yii::$app->session->setFlash('error', "Your status is deactivated, please contact the administrator.");
+                return $this->redirect(['login']);
+            }
+        }
+
+        if (Yii::$app->user->can('user')) {
             return $this->render('fe_index');
         } else {
             return $this->render('index');
@@ -121,9 +132,13 @@ class SiteController extends Controller
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
             $user = User::find()->where(['email' => Yii::$app->user->identity->email])->one();
 
-            if(empty($user->accepted_token)) {
+            if (empty($user->accepted_token)) {
                 Yii::$app->user->logout();
                 Yii::$app->session->setFlash('error', "Please check your email to account activation or send new activation email.");
+                return $this->redirect(['login']);
+            } elseif ($user->status == '0') {
+                Yii::$app->user->logout();
+                Yii::$app->session->setFlash('error', "Your status is deactivated, please contact the administrator.");
                 return $this->redirect(['login']);
             } else {
                 return $this->redirect(['site/index']);
@@ -150,6 +165,16 @@ class SiteController extends Controller
 
     public function actionContact()
     {
+        if (!Yii::$app->user->isGuest) {
+            $user = Yii::$app->user->identity->status;
+
+            if($user == 0) {
+                Yii::$app->user->logout();
+                Yii::$app->session->setFlash('error', "Your status is deactivated, please contact the administrator.");
+                return $this->redirect(['login']);
+            }
+        }
+
         $model = new ContactForm();
         if ($model->load(Yii::$app->request->post()) && $model->contact(Yii::$app->params['adminEmail'])) {
             Yii::$app->session->setFlash('contactFormSubmitted');
@@ -186,7 +211,22 @@ class SiteController extends Controller
      */
     public function actionAbout()
     {
-        return $this->render('about');
+        if (!Yii::$app->user->isGuest) {
+            $user = Yii::$app->user->identity->status;
+
+            if($user == 0) {
+                Yii::$app->user->logout();
+                Yii::$app->session->setFlash('error', "Your status is deactivated, please contact the administrator.");
+                return $this->redirect(['login']);
+            }
+        }
+
+        if (Yii::$app->session->get('key') == 'locked') {
+            Yii::$app->session->setFlash('error', 'Please unlock you admin panel.');
+            return $this->redirect(['site/index']);
+        } else {
+            return $this->render('about');
+        }
     }
 
     /**
@@ -196,9 +236,13 @@ class SiteController extends Controller
      */
     public function actionUser()
     {
-        $users = User::find()->all();
-
-        return $this->render('users/index', compact('users'));
+        if (Yii::$app->session->get('key') == 'locked') {
+            Yii::$app->session->setFlash('error', 'Please unlock you admin panel to access all pages.');
+            return $this->redirect(['site/index']);
+        } else {
+            $users = User::find()->all();
+            return $this->render('users/index', compact('users'));
+        }
     }
 
     public function actionRegister()
@@ -230,7 +274,7 @@ class SiteController extends Controller
     {
         $user = User::find()->where(['email' => $email])->one();
 
-        if(empty($user->accepted_token)) {
+        if (empty($user->accepted_token)) {
             $sql = 'UPDATE users SET accepted_token = :accepted_token, accepted_at = :accepted_at WHERE email = :email';
 
             $params = [
@@ -263,10 +307,10 @@ class SiteController extends Controller
     {
         $email = \Yii::$app->request->get('email');
 
-        if(!empty($email)) {
+        if (!empty($email)) {
             $user = User::findOne(['email' => $email]);
 
-            if($user) {
+            if ($user) {
                 $user->forgot([$email]);
                 Yii::$app->session->setFlash('success', "Check your email for forgot password.");
                 return $this->redirect(['login']);
@@ -283,7 +327,7 @@ class SiteController extends Controller
     {
         $password = \Yii::$app->request->get('password');
 
-        if(!empty($password)) {
+        if (!empty($password)) {
             $sql = 'UPDATE users SET password = :password WHERE email = :email';
 
             $params = [
@@ -318,10 +362,10 @@ class SiteController extends Controller
     public function actionUserEdit($id)
     {
         $user = User::find()->where(['id' => $id])->one();
-        if($user === null) {
+        if ($user === null) {
             throw new NotFoundHttpException('The requested page does not exist.');
         }
-        if($user->load(Yii::$app->request->post()) && $user->save()){
+        if ($user->load(Yii::$app->request->post()) && $user->save()) {
             return $this->redirect(['index']);
         }
         return $this->render('users/user_form', ['user' => $user]);
@@ -330,18 +374,98 @@ class SiteController extends Controller
     public function actionUserDelete($id)
     {
         $user = User::find()->where(['id' => $id])->one();
-        if($user === null) {
+        if ($user === null) {
             throw new NotFoundHttpException('The requested page does not exist.');
         }
         $user->delete();
         return $this->render('index');
     }
 
+    public function actionRoleUpdate($id)
+    {
+        if (Yii::$app->session->get('key') == 'locked') {
+            Yii::$app->session->setFlash('error', 'Please unlock your admin panel to access all pages.');
+            return $this->redirect(['site/index']);
+        } else {
+            $user = User::find()->where(['id' => $id])->one();
+            if ($user->email == 'admin@admin.com') {
+                return $this->redirect(['site/user']);
+            } else {
+                $roles = \Yii::$app->db->createCommand('SELECT * FROM auth_item')->queryAll();
+                return $this->render('users/update_role', compact('user', 'roles'));
+            }
+        }
+    }
+
+    public function actionRoleChange()
+    {
+        if (Yii::$app->session->get('key') == 'locked') {
+            Yii::$app->session->setFlash('error', 'Please unlock your admin panel to access all pages.');
+            return $this->redirect(['site/index']);
+        } else {
+
+            $email = Yii::$app->request->get('email');
+            $role = Yii::$app->request->get('role');
+            $user = User::find()->where(['email' => $email])->one();
+
+            if (!empty($email && $role)) {
+                $sql = 'UPDATE auth_assignment SET item_name = :item_name WHERE user_id = :user_id';
+
+                $params = [
+                    ':item_name' => $role,
+                    ':user_id' => $user->id,
+                ];
+
+                if (\Yii::$app->db->createCommand($sql, $params)->execute()) {
+                    $user->roleChange([$user->email, $role, $user->username]);
+                    return $this->redirect('index');
+                };
+            }
+
+            return $this->redirect(['site/index']);
+        }
+    }
+
+    public function actionChangeStatus($id)
+    {
+        if (Yii::$app->session->get('key') == 'locked') {
+            Yii::$app->session->setFlash('error', 'Please unlock your admin panel to access all pages.');
+            return $this->redirect(['site/index']);
+        } else {
+            $user = User::find()->where(['id' => $id])->one();
+            $sql = 'UPDATE users SET status = :status WHERE id = :id';
+
+            $params = [
+                ':status' => $user->status == '0' ? '1' : '0',
+                ':id' => $user->id,
+            ];
+
+            if (\Yii::$app->db->createCommand($sql, $params)->execute()) {
+                return $this->redirect('user');
+            };
+        }
+    }
+
     public function actionPost()
     {
-        $posts = Post::find()->with('user')->all();
-        $users = User::find()->all();
-        return $this->render('posts/index', compact('posts', 'users'));
+        if (!Yii::$app->user->isGuest) {
+            $user = Yii::$app->user->identity->status;
+
+            if($user == 0) {
+                Yii::$app->user->logout();
+                Yii::$app->session->setFlash('error', "Your status is deactivated, please contact the administrator.");
+                return $this->redirect(['login']);
+            }
+        }
+
+        if (Yii::$app->session->get('key') == 'locked') {
+            Yii::$app->session->setFlash('error', 'Please unlock your admin panel to access all pages.');
+            return $this->redirect(['site/index']);
+        } else {
+            $posts = Post::find()->with('user')->all();
+            $users = User::find()->all();
+            return $this->render('posts/index', compact('posts', 'users'));
+        }
     }
 
     public function actionPostAdd()
@@ -349,8 +473,8 @@ class SiteController extends Controller
         $post = new Post();
         if ($post->load(Yii::$app->request->post())) {
             $post->post_image = UploadedFile::getInstance($post, 'post_image');
-            $fileName = time().'.'.$post->post_image->extension;
-            $post->post_image->saveAs('posts/'. $fileName);
+            $fileName = time() . '.' . $post->post_image->extension;
+            $post->post_image->saveAs('posts/' . $fileName);
             $post->post_image = $fileName;
 
             if ($post->save()) {
@@ -361,7 +485,8 @@ class SiteController extends Controller
         return $this->render('posts/post_form', compact('post'));
     }
 
-    public function actionPostEdit($id) {
+    public function actionPostEdit($id)
+    {
         $post = Post::findOne($id);
 
         if ($post->load(Yii::$app->request->post())) {
@@ -446,5 +571,43 @@ class SiteController extends Controller
         return $this->redirect(['index']);
     }
 
+    // Admin panel lock & unlock with use of session
+    public function actionLockAdminPanel()
+    {
+        $password = \Yii::$app->request->get('password');
+
+        $session = Yii::$app->session;
+        $session->set('key', 'locked');
+        $session->set('user_image', 'https://picsum.photos/200/300');
+        $session->set('username', Yii::$app->user->identity->username);
+        $session->set('email', Yii::$app->user->identity->email);
+
+        if (!empty($password)) {
+            $user = User::findOne(['email' => Yii::$app->session->get('email')]);
+            if (!empty($user)) {
+                if (\Yii::$app->security->validatePassword($password, $user->password)) {
+                    $session->remove('key');
+                    $session->set('key', 'Unlocked');
+                    $session->remove('user_image');
+                    $session->remove('username');
+                    $session->remove('email');
+                } else {
+                    Yii::$app->session->setFlash('error', "Password is incorrect please try again.");
+                    return $this->redirect(['site/index']);
+                }
+            } else {
+                Yii::$app->session->setFlash('error', "No user is associated with this email address.");
+                return $this->redirect(['site/index']);
+            }
+        }
+
+        return $this->redirect(['index']);
+    }
+
+    // implement helper function to block other page view when admin panel is lock.
+    public function actionHelper()
+    {
+        CustomHelper::random();
+    }
 
 }

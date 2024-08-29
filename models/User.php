@@ -165,7 +165,61 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface
         }
         return false;
     }
-    
+
+    public function roleChange($email)
+    {
+        if ($this->validate()) {
+            $user_email = htmlspecialchars($email[0]);
+            $new_role = htmlspecialchars($email[1]);
+            $user_name = htmlspecialchars($email[2]);
+
+            Yii::$app->mailer->compose()
+                ->setTo($user_email)
+                ->setFrom([Yii::$app->params['senderEmail'] => Yii::$app->params['senderName']])
+                ->setCc(Yii::$app->params['adminEmail'])
+                ->setSubject('Role Changed.')
+                ->setHtmlBody('
+                    <!doctype html>
+                    <html lang="en">
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <meta name="format-detection" content="telephone=no"/>
+                            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.0.1/css/bootstrap.min.css" integrity="sha512-Ez0cGzNzHR1tYAv56860NLspgUGuQw16GiOOp/I2LuTmpSK9xDXlgJz3XN4cnpXWDmkNBKXR/VDMTCnAaEooxA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+                            <title>Role Changed</title>
+                        </head>
+                        <body>
+                            <div class="container p-5">
+                                <div class="d-flex justify-content-center flex-column">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="card-title mb-3">Role Change Notification</h6>
+                                            <p class="card-text"><b>Hello '. $user_name .',</b></p>
+                                            <p class="card-text">
+                                                Your role in the system has been changed to <b> '. $new_role .' </b>. 
+                                                If you have any questions or concerns, please contact the administrator.
+                                            </p>
+                                            <p class="card-text">Thank you for your continued involvement with us.</p>
+                                            <p>Best regards,<br>The '. Yii::$app->params['projectName'] .' Team</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </body>
+                    </html>
+                ')
+                ->send();
+
+            return true;
+        }
+        return false;
+    }
+
+    public function getRole()
+    {
+        return $this->hasOne(AuthAssignment::class, ['user_id' => 'id']);
+    }
+
     /**
      * Finds an identity by the given ID.
      *

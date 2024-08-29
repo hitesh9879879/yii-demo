@@ -19,7 +19,7 @@ class ArrayController extends \yii\web\Controller
                     [
                         'actions' => ['index'],
                         'allow' => true,
-                        'roles' => ['admin'],
+                        'roles' => ['admin', 'temporary admin'],
                     ],
                 ],
             ],
@@ -34,26 +34,31 @@ class ArrayController extends \yii\web\Controller
 
     public function actionIndex()
     {
-        $model = \Yii::$app->request->get('model');
-        $count = \Yii::$app->request->get('count');
-
-        if (!empty($model)) {
-            $query = new Query();
-            $provider = new ArrayDataProvider([
-                'allModels' => $query->from($model)->all(),
-                'pagination' => [
-                    'pageSize' => $count,
-                ],
-            ]);
-
-            $data = $provider->getModels();
-            $pageDataCount = $provider->getCount();
+        if(\Yii::$app->session->get('key') == 'locked') {
+            \Yii::$app->session->setFlash('error', 'Please unlock you admin panel.');
+            return $this->redirect(['site/index']);
         } else {
-            $data = '';
-            $pageDataCount = '0';
-        }
+            $model = \Yii::$app->request->get('model');
+            $count = \Yii::$app->request->get('count');
 
-        return $this->render('index', compact('data', 'model', 'count', 'pageDataCount'));
+            if (!empty($model)) {
+                $query = new Query();
+                $provider = new ArrayDataProvider([
+                    'allModels' => $query->from($model)->all(),
+                    'pagination' => [
+                        'pageSize' => $count,
+                    ],
+                ]);
+
+                $data = $provider->getModels();
+                $pageDataCount = $provider->getCount();
+            } else {
+                $data = '';
+                $pageDataCount = '0';
+            }
+
+            return $this->render('index', compact('data', 'model', 'count', 'pageDataCount'));
+        }
     }
 
 

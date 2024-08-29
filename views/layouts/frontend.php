@@ -105,7 +105,12 @@
                                 ?></li>
                         </ul>
                     <?php endif; ?>
-                </div>
+                </div> &nbsp;&nbsp;
+                <?php if (!Yii::$app->user->isGuest): ?>
+                    <a href="<?= \yii\helpers\Url::to(['../debug']) ?>" class="btn btn-dark p-2">
+                        <i class="fa fa-bug"></i>
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
     </nav>

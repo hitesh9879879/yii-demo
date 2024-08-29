@@ -2,6 +2,8 @@
 
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
+$mailer = require __DIR__ . '/mailer.php';
+$access = require __DIR__ . '/access.php';
 
 $config = [
     'id' => 'basic',
@@ -32,13 +34,7 @@ $config = [
         'errorHandler' => [
             'errorAction' => 'site/error',
         ],
-        'mailer' => [
-            'class' => \yii\symfonymailer\Mailer::class,
-            'viewPath' => '@app/mail',
-            'transport' => [
-                'dsn' => 'smtp://9c86b21594a49d:b3358434a566f6@sandbox.smtp.mailtrap.io:2525'
-            ],
-        ],
+        'mailer' => $mailer,
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
             'targets' => [
@@ -65,20 +61,7 @@ $config = [
             'class' => 'mdm\admin\Module',
         ],
     ],
-    'as access' => [
-        'class' => 'mdm\admin\components\AccessControl',
-        'allowActions' => [
-            'site/*',
-            'setting/*',
-            'admin/*',
-            'comment/*',
-            'gii/*',
-            'array/*',
-            'api/*',
-            'excel/*',
-            'some-controller/some-action',
-        ]
-    ],
+    'as access' => $access,
     'params' => $params,
 ];
 

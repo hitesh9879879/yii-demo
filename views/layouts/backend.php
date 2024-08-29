@@ -68,46 +68,48 @@
                         <button class="close"></button>
                     </div>
 
-                    <ul class="header-menu nav">
-                        <li class="nav-item">
-                            <a href="/site/send-mail"
-                               class="nav-link <?= Yii::$app->controller->action->getUniqueId() === 'site/send-mail' ? 'text-primary' : '' ?>">
-                                <i class="nav-link-icon fa fa-envelope <?= Yii::$app->controller->action->getUniqueId() === 'site/send-mail' ? 'text-primary' : '' ?>"> </i>
-                                Send Mail
-                            </a>
-                        </li>
-                        <li class="dropdown nav-item">
-                            <a href="/setting"
-                               class="nav-link <?= Yii::$app->controller->action->getUniqueId() === 'setting/index' ? 'text-primary' : '' ?>">
-                                <i class="nav-link-icon fa fa-cog <?= Yii::$app->controller->action->getUniqueId() === 'setting/index' ? 'text-primary' : '' ?>"></i>
-                                Settings
-                            </a>
-                        </li>
-                        <li class="dropdown nav-item">
-                            <span class="nav-link" onclick="add()">
-                                <i class="nav-link-icon fa fa-check"></i>
-                                Add Comment
-                            </span>
-                        </li>
-                        <li class="dropdown nav-item">
-                            <a href="/site/comment-remove" class="nav-link">
-                                <i class="nav-link-icon fa fa-close"></i>
-                                All Comment Remove
-                            </a>
-                        </li>
-                        <li class="dropdown nav-item">
-                            <a href="/site/queue-work" class="nav-link">
-                                <i class="nav-link-icon fa fa-cloud-upload"></i>
-                                Run Queue
-                            </a>
-                        </li>
-                        <li class="dropdown nav-item">
-                            <a href="/site/clear-directory" class="nav-link">
-                                <i class="nav-link-icon fa fa-trash"></i>
-                                Clear Directory
-                            </a>
-                        </li>
-                    </ul>
+                    <?php if (\Yii::$app->user->can('admin')): ?>
+                        <ul class="header-menu nav">
+                            <li class="nav-item">
+                                <a href="/site/send-mail"
+                                   class="nav-link <?= Yii::$app->controller->action->getUniqueId() === 'site/send-mail' ? 'text-primary' : '' ?>">
+                                    <i class="nav-link-icon fa fa-envelope <?= Yii::$app->controller->action->getUniqueId() === 'site/send-mail' ? 'text-primary' : '' ?>"> </i>
+                                    Send Mail
+                                </a>
+                            </li>
+                            <li class="dropdown nav-item">
+                                <a href="/setting"
+                                   class="nav-link <?= Yii::$app->controller->action->getUniqueId() === 'setting/index' ? 'text-primary' : '' ?>">
+                                    <i class="nav-link-icon fa fa-cog <?= Yii::$app->controller->action->getUniqueId() === 'setting/index' ? 'text-primary' : '' ?>"></i>
+                                    Settings
+                                </a>
+                            </li>
+                            <li class="dropdown nav-item">
+                                <span class="nav-link" onclick="add()">
+                                    <i class="nav-link-icon fa fa-check"></i>
+                                    Add Comment
+                                </span>
+                            </li>
+                            <li class="dropdown nav-item">
+                                <a href="/site/comment-remove" class="nav-link">
+                                    <i class="nav-link-icon fa fa-close"></i>
+                                    All Comment Remove
+                                </a>
+                            </li>
+                            <li class="dropdown nav-item">
+                                <a href="/site/queue-work" class="nav-link">
+                                    <i class="nav-link-icon fa fa-cloud-upload"></i>
+                                    Run Queue
+                                </a>
+                            </li>
+                            <li class="dropdown nav-item">
+                                <a href="/site/clear-directory" class="nav-link">
+                                    <i class="nav-link-icon fa fa-trash"></i>
+                                    Clear Directory
+                                </a>
+                            </li>
+                        </ul>
+                    <?php endif; ?>
                 </div>
 
                 <form action="<?= \yii\helpers\Url::to(['site/comment-add']) ?>" method="GET" id="count"
@@ -151,7 +153,17 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> &nbsp;&nbsp;
+            <?php if (!Yii::$app->user->isGuest): ?>
+                <a href="<?= \yii\helpers\Url::to(['../debug']) ?>" class="btn btn-dark p-2">
+                    <i class="fa fa-bug"></i>
+                </a> &nbsp;&nbsp;
+            <?php endif; ?>
+            <?php if (!Yii::$app->user->isGuest): ?>
+                <a href="<?= \yii\helpers\Url::to(['site/lock-admin-panel']) ?>" class="btn btn-dark p-2">
+                    <i class="fa fa-lock"></i>
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -201,14 +213,16 @@
                                     Dashboard
                                 </a>
                             </li>
-                            <li class="mt-1">
-                                <a href="/site/about"
-                                   class="<?= Yii::$app->controller->action->getUniqueId() === 'site/about' ? 'mm-active' : 'mm' ?>">
-                                    <i class="fa fa-th pe-7s-rocket"></i>
-                                    About
-                                </a>
-                            </li>
-                            <?php if (\Yii::$app->user->can('admin')): ?>
+<!--                            --><?php //if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('temporary admin')): ?>
+<!--                                <li class="mt-1">-->
+<!--                                    <a href="/site/about"-->
+<!--                                       class="--><?php //= Yii::$app->controller->action->getUniqueId() === 'site/about' ? 'mm-active' : 'mm' ?><!--">-->
+<!--                                        <i class="fa fa-th pe-7s-rocket"></i>-->
+<!--                                        About-->
+<!--                                    </a>-->
+<!--                                </li>-->
+<!--                            --><?php //endif; ?>
+                            <?php if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('temporary admin')): ?>
                                 <li class="mt-1">
                                     <a href="/site/user"
                                        class="<?= Yii::$app->controller->action->getUniqueId() === 'site/user' || Yii::$app->controller->action->getUniqueId() === 'site/user-add' ? 'mm-active' : 'mm' ?>">
@@ -217,7 +231,7 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
-                            <?php if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('user')): ?>
+                            <?php if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('user') || \Yii::$app->user->can('temporary admin')): ?>
                                 <li class="mt-1">
                                     <a href="/site/post"
                                        class="<?= Yii::$app->controller->action->getUniqueId() === 'site/post' || Yii::$app->controller->action->getUniqueId() === 'site/post-add' ? 'mm-active' : 'mm' ?>">
@@ -226,7 +240,7 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
-                            <?php if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('user')): ?>
+                            <?php if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('user') || \Yii::$app->user->can('temporary admin')): ?>
                                 <li class="mt-1">
                                     <a href="/comment/comment-list"
                                        class="<?= Yii::$app->controller->action->getUniqueId() === 'comment/comment-list' ? 'mm-active' : 'mm' ?>">
@@ -235,7 +249,7 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
-                            <?php if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('user')): ?>
+                            <?php if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('user') || \Yii::$app->user->can('temporary admin')): ?>
                                 <li class="mt-1">
                                     <a href="/array/index"
                                        class="<?= Yii::$app->controller->action->getUniqueId() === 'array/index' ? 'mm-active' : 'mm' ?>">
@@ -244,7 +258,7 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
-                            <?php if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('user')): ?>
+                            <?php if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('user') || \Yii::$app->user->can('temporary admin')): ?>
                                 <li class="mt-1">
                                     <a href="/api/index"
                                        class="<?= Yii::$app->controller->action->getUniqueId() === 'api/index' ? 'mm-active' : 'mm' ?>">
@@ -253,7 +267,7 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
-                            <?php if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('user')): ?>
+                            <?php if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('user') || \Yii::$app->user->can('temporary admin')): ?>
                                 <li class="mt-1">
                                     <a href="/excel/index"
                                        class="<?= Yii::$app->controller->action->getUniqueId() === 'excel/index' ? 'mm-active' : 'mm' ?>">
@@ -262,7 +276,7 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
-                            <?php if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('user')): ?>
+                            <?php if (\Yii::$app->user->can('admin')): ?>
                                 <li class="mt-1">
                                     <a href="/gii/controller"
                                        class="mm">
@@ -271,7 +285,7 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
-                            <?php if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('user')): ?>
+                            <?php if (\Yii::$app->user->can('admin')): ?>
                                 <li class="mt-1">
                                     <a href="/admin"
                                        class="mm">
@@ -311,6 +325,17 @@
 
         commentBox.style.display = 'none';
     }
+    //
+    //let timeout;
+    //
+    //function startTimer() {
+    //    clearTimeout(timeout);
+    //    timeout = setTimeout(function() {
+    //        window.location.href = "<?php //= \yii\helpers\Url::to(['site/lock-admin-panel']) ?>//";
+    //    }, 20000);
+    //}
+    //window.addEventListener('mousemove', startTimer);
+    //startTimer();
 </script>
 </body>
 </html>

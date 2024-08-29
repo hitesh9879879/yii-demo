@@ -38,30 +38,34 @@ $this->title = 'Api Request Data';
                 <h5><?= \yii\helpers\Html::encode($this->title) ?></h5>
             </div>
             <div class="card-body p-3">
-                <div class="card-group g-4">
-                    <?php if (!empty($articles)): ?>
-                        <?php foreach ($articles as $article): ?>
-                            <div class="card ml-2">
-                                <img src="<?= \yii\helpers\Html::encode($article['urlToImage'] ?? 'https://t4.ftcdn.net/jpg/04/70/29/97/360_F_470299797_UD0eoVMMSUbHCcNJCdv2t8B2g1GVqYgs.jpg') ?>" class="card-img-top"
-                                     alt="..." style="height: 200px">
-                                <div class="card-body">
-                                    <h5 class="card-title"><?= \yii\helpers\Html::encode($article['title']) ?></h5>
-                                    <h6 class="card-title">Author
-                                        : <?= \yii\helpers\Html::encode($article['author']) ?></h6>
-                                    <p class="card-text"><?= \yii\helpers\Html::encode($article['content']) ?></p>
-                                </div>
-                                <div class="card-footer">
-                                    <div>
-                                        <small class="text-muted"><?= \yii\helpers\Html::encode($article['publishedAt']) ?></small>
-                                        &nbsp;&nbsp;&nbsp;
-                                        <a href="<?= \yii\helpers\Html::encode($article['url']) ?>">Read more</a>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="<?= \Yii::$app->user->can('user') ? 'row row-cols-1 row-cols-md-3 g-4' : 'row row-cols-1 row-cols-md-2 g-4' ?>">
+                            <?php if (!empty($articles)): ?>
+                                <?php foreach ($articles as $article): ?>
+                                    <div class="col">
+                                        <div class="card">
+                                            <img src="<?= \yii\helpers\Html::encode($article['urlToImage'] ?? 'https://t4.ftcdn.net/jpg/04/70/29/97/360_F_470299797_UD0eoVMMSUbHCcNJCdv2t8B2g1GVqYgs.jpg') ?>"
+                                                 class="card-img-top" alt="..." style="height: 250px; object-fit: cover">
+                                            <div class="card-body d-flex flex-column">
+                                                <h5 class="card-title"><?= \yii\helpers\Html::encode($article['title']) ?></h5>
+                                                <h5 class="card-title"> Author: <?= \yii\helpers\Html::encode($article['author']) ?></h5>
+                                                <p class="card-text flex-grow-1"><?= \yii\helpers\Html::encode($article['content']) ?></p>
+                                                <a href="<?= \yii\helpers\Html::encode($article['url']) ?>"
+                                                   class="btn btn-primary col-lg-12 mt-auto">Read more</a>
+                                            </div>
+                                            <div class="card-footer">
+                                                <small class="text-muted"><?= \yii\helpers\Html::encode($article['publishedAt']) ?></small>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <h5 class="text-center col-lg-12"><b>No news available.</b></h5>
-                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <h5 class="text-center col-lg-12"><b>No news available.</b></h5>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="card-footer">

@@ -48,7 +48,7 @@ $this->title = 'Posts';
                             <div class="mb-3">
                                 <label for="exampleInputPassword1" class="form-label">User's</label>
                                 <select class="form-control" name="user_id">
-                                    <option>Select user</option>
+                                    <option value="0">Select user</option>
                                     <?php foreach ($users as $user): ?>
                                         <option value="<?= $user->id ?>">
                                             <?= htmlspecialchars($user->username, ENT_QUOTES, 'UTF-8') ?>
@@ -83,9 +83,10 @@ $this->title = 'Posts';
 
                                 $currentUserId = Yii::$app->user->identity->id;
 
-                                $isAdmin = Yii::$app->authManager->getRolesByUser($currentUserId)['admin'] ?? false; ?>
+                                $isAdmin = Yii::$app->authManager->getRolesByUser($currentUserId)['admin'] ?? false;
+                                $isTempAdmin = Yii::$app->authManager->getRolesByUser($currentUserId)['temporary admin'] ?? false; ?>
 
-                                <?php if ($isAdmin): ?>
+                                <?php if ($isAdmin || $isTempAdmin): ?>
                                     <tr>
                                         <td class="text-center text-muted">#<?= $post['id']; ?></td>
                                         <td class="text-muted">
@@ -103,7 +104,7 @@ $this->title = 'Posts';
                                         </td>
                                         <td class="text-muted"><?= \yii\helpers\StringHelper::truncate($post['description'], 80) ?></td>
                                         <td class="text-center">
-                                            <?php if (\Yii::$app->user->can('admin')): ?>
+                                            <?php if (\Yii::$app->user->can('admin') || \Yii::$app->user->can('temporary admin')): ?>
                                                 <?= \yii\helpers\Html::a("Edit", ['post-edit', 'id' => $post->id], ['class' => 'btn btn-info']); ?>
                                                 <?= \yii\helpers\Html::a("Delete", ['delete', 'id' => $post->id], ['class' => 'btn btn-danger']); ?>
                                             <?php else: ?>
